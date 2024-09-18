@@ -11,7 +11,7 @@
 * Diffusion Zero-Shot Classifier (for Task 1):
 1) stable-diffusion-v1-4
 
-The complete implementation of each of the models with the necessary utility functions can be found [here](README.md).
+The complete implementation of each of the models with the necessary utility functions can be found [here](models/model.py).
 
 ## Task 1: Text-to-Image Generative Model as Zero-Shot Classifier
 
