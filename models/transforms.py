@@ -10,12 +10,10 @@ transforms_resnet = transforms.Compose([
 transforms_vit = transforms.Compose([
     transforms.ToTensor(),
     transforms.Resize((224, 224)),
-    transforms.ToTensor(),
     transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
 ])
 
 transforms_clip_vit = transforms.Compose([
-        transforms.ToPILImage(),
         transforms.Resize((224,224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])

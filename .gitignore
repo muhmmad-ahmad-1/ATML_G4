@@ -3,3 +3,7 @@
 *.csv
 *.log
 /__pycache__
+/PACS
+*.jpg
+*.png
+/Task_2_Benchmarking

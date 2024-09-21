@@ -18,12 +18,23 @@ The complete implementation of each of the models with the necessary utility fun
 
 ## Task 2: Evaluation on an IID Dataset
 | Model             | Epochs Trained | Top-1 Accuracy (Train) | Top-1 Accuracy (Test)
-| :---------------- | :------: | :----: | :---:
+| :---------------- | :------: | :----: | :---: |
 | ResNet-18        |   30   | 79.05 | 78.21 | 
 | ResNet-50           |   3   | 78.67 | 78.01 |
 | ViT-Base_Patch16_224   |  3   | 94.49 | 94.44 |
 | ViT_Base_Patch16_CLIP_224 |  3   | 95.44 | 95.41 |
 
 ## Task 3: Evaluation for Domain Generalization
-* PCAS Dataset: 
+* PCAS Dataset: All Models are trained on 3 epochs
+
+| Model                  | Photo  | Art    | Cartoon | Sketch |
+| :--------------------- | :----: | :----: | :-----: | :----: |
+| ResNet-50              | 63.82  | 53.11  | 92.57   | 49.45  |
+| ViT-Base_Patch16_224   | 88.67  | 77.39  | 90.36   | 64.52  |
+| ViT_Base_Patch16_CLIP_224 | 85.93  | 69.84  | 98.44   | 70.40  |
+
+* CIFAR100 Splits
+
+
+
 

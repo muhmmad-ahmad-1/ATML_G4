@@ -1,8 +1,11 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader,Dataset
+from torch.utils.data import DataLoader,Dataset,ConcatDataset
 from transformers import DistilBertTokenizer
-from models.transforms import transforms_clip_vit
+from models.transforms import transforms_clip_vit, transforms_resnet
+from torchvision import datasets
+import os
+import random
 
 #''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
@@ -32,7 +35,8 @@ def train_step(model: nn.Module,
                loss_fn: nn.Module,
                optimizer: torch.optim.Optimizer,
                device: str,
-               modeltype: str):
+               modeltype: str,
+               data:str = "cifar10"):
     model = model.to(device)
     model.train()
     total_loss = 0
@@ -55,8 +59,10 @@ def train_step(model: nn.Module,
             optimizer.zero_grad()
             x_batch, y_batch = batch
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
-
-            captions = cifar10_label_to_text(y_batch.cpu().numpy())
+            if data == "cifar10":
+                captions = cifar10_label_to_text(y_batch.cpu().numpy())
+            elif data == "pacs":
+                captions = PACS_label_to_text(y_batch.cpu().numpy())
             encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
             encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
             batch = {'image': x_batch, 'caption': encoded_captions}
@@ -97,17 +103,22 @@ def eval_step(model: nn.Module,
     pred_list = None
     total_loss = 0
 
-    if modeltype == 'clip' and data == "cifar10":        
-        captions = cifar10_label_to_text([0,1,2,3,4,5,6,7,8,9])
-        tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-        encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
-        encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
+    if modeltype == 'clip':
+        if data == "cifar10":        
+            captions = cifar10_label_to_text([0,1,2,3,4,5,6,7,8,9])
+            tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+            encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
+            encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
+        elif data == "pacs":
+            captions = PACS_label_to_text([0,1,2,3,4,5,6])
+            tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+            encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
+            encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
                 
     for i,batch in enumerate(dataloader):
         if modeltype != 'clip':
             x_batch, y_batch = batch
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
-
             pred = model(x_batch)
 
             loss = loss_fn(pred,y_batch.reshape(-1).long())
@@ -119,7 +130,6 @@ def eval_step(model: nn.Module,
             batch = move_tensors_to_device(batch,device)
             pred = model(batch)
             loss = loss_fn(pred, y_batch) 
-            total_loss += loss.item()
             #print(torch.argmax(pred,dim=1),y_batch)
         pred_list = torch.cat([pred_list,torch.argmax(pred,dim=1) == y_batch]) if pred_list is not None else torch.argmax(pred,dim=1) == y_batch
 
@@ -187,27 +197,7 @@ class CLIPDataset(Dataset):
 def cifar10_label_to_text(labels):
     
     class_names = ['an airplane', 'an automobile', 'a bird', 'a cat', 'a deer', 'a dog', 'a frog', 'a horse', 'a ship', 'a truck']
-    sentences = ["a flying airplane in the sky",
-                 "a car driving on the road",
-                 "a small bird perched on a branch",
-                  "a domestic cat sitting on the floor",
-                  "a wild deer standing in a forest",
-                  "a friendly dog playing outside",
-                  "a frog hopping near a pond.",
-                  "a running horse in a field",
-                  "a large ship sailing in the ocean",
-                  "a big truck transporting goods"]
     return [f"This is a photo of a {class_names[label]}." for label in labels]
-
-class CIFAR10_CLIPDataset(CLIPDataset):
-    def __init__(self,dataset, transform, max_length):
-        super(CLIPDataset,self).__init__()
-        self.captions = cifar10_label_to_text(dataset.targets)
-        self.unique_captions = cifar10_label_to_text([0,1,2,3,4,5,6,7,8,9])
-        self.dataset = CLIPDataset(dataset.data,self.captions,transform,max_length)
-    
-    def data(self):
-        return self.dataset
 
 class CustomDataset(Dataset):
     def __init__(self, images, labels, transform=None):
@@ -247,19 +237,91 @@ class DataLoaders(DataLoader):
 
                 shuffled_images = []
                 shuffled_labels = []
-
-                for i in range(len(class_images[0])):
-                    for class_label in range(10):
+                indices = range(len(class_images[0]))
+                random.shuffle(indices)
+                for i in range(indices):
+                    for class_label in range(7):
                         shuffled_images.append(class_images[class_label][i])
                         shuffled_labels.append(class_label)
                 train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_clip_vit)
                 test_dataset = CustomDataset(test_dataset.data,test_dataset.targets,transform=transforms_clip_vit)
-                # self.train_dataset = CIFAR10_CLIPDataset(train,transform=transforms_clip_vit,max_length=200)
-                # self.test_dataset = CIFAR10_CLIPDataset(test_dataset,transform=transforms_clip_vit,max_length=200)
                 self.train_loader = DataLoader(train_dataset,batch_size=10,shuffle=False)
                 self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=True)
     def get_loaders(self):
         return self.train_loader, self.test_loader
+
+#``````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+
+class PACS_dataloaders(DataLoader):
+    def __init__(
+        self,model_type,test_domain,batch_size,shuffle
+    ):
+        domains = ['art_painting', 'cartoon','photo','sketch'] 
+        self.test_domain = test_domain
+        self.train_domain = [domain for domain in domains if domain != test_domain]
+        data_dir = 'PACS'
+        if model_type == 'resnet' or model_type == 'vit':
+            transform = transforms_resnet if model_type == 'resnet' else transforms_clip_vit
+            self.train_dataset = []
+            for domain in self.train_domain:
+                train_path = os.path.join(data_dir,domain)
+                self.train_dataset.append(datasets.ImageFolder(train_path, transform=transform)) 
+            self.train_dataset = ConcatDataset(self.train_dataset)
+            test_path = os.path.join(data_dir,self.test_domain)
+            self.test_dataset = datasets.ImageFolder(test_path, transform=transform)
+            self.train_loader = DataLoader(self.train_dataset,batch_size=batch_size,shuffle=shuffle) 
+            self.test_loader = DataLoader(self.test_dataset,batch_size=batch_size,shuffle=shuffle) 
+        
+        else:
+            self.train_dataset = []
+            for domain in self.train_domain:
+                train_path = os.path.join(data_dir,domain)
+                self.train_dataset.append(datasets.ImageFolder(train_path)) 
+            self.train_dataset = ConcatDataset(self.train_dataset)
+            test_path = os.path.join(data_dir,self.test_domain)
+            self.test_dataset = datasets.ImageFolder(test_path)
+            
+            #print(self.test_dataset.class_to_idx)
+            images = []
+            labels = []
+            for image, label in self.train_dataset:
+               images.append(image)
+               labels.append(label)
+
+            class_images = {i: [] for i in range(7)}
+
+            for img, label in zip(images, labels):
+                class_images[label].append(img)
+
+            shuffled_images = []
+            shuffled_labels = []
+            images = []
+            labels = []
+            for image, label in self.test_dataset:
+               images.append(image)
+               labels.append(label)
+
+
+            min_samples_per_class = min([len(class_images[i]) for i in range(7)])
+            samples = list(range(min_samples_per_class))
+            random.shuffle(samples)
+
+            for i in range(min_samples_per_class):
+                for class_label in range(7):
+                    shuffled_images.append(class_images[class_label][i])
+                    shuffled_labels.append(class_label)
+            train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_clip_vit)
+            self.test_dataset = CustomDataset(images,labels,transform=transforms_clip_vit)
+            self.train_loader = DataLoader(train_dataset,batch_size=7,shuffle=False)
+            self.test_loader = DataLoader(self.test_dataset,batch_size=batch_size,shuffle=shuffle)
+    
+    def get_loaders(self):
+        return self.train_loader, self.test_loader
+            
+def PACS_label_to_text(labels):
+    
+    class_names = ['a dog', 'an elephant', 'a giraffe', 'a guitar','a horse', 'a house', 'a person']
+    return [f"This is an image of {class_names[label]}." for label in labels]
     
         
 
