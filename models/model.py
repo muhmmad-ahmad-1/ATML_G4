@@ -141,7 +141,6 @@ class CLIPModel(nn.Module):
         
         return logits
 
-if __name__ == "__main__":
-    model = ImageEncoder(10)
+
 
     
