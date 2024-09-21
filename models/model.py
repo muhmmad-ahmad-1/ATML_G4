@@ -1,9 +1,8 @@
 import torch 
 import torch.nn as nn
 import torchvision
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet18, ResNet18_Weights, resnet50, ResNet50_Weights
 from torchvision import transforms
-from torchsummary import summary
 import timm
 from transformers import DistilBertModel, DistilBertConfig, DistilBertTokenizer
 
@@ -28,6 +27,26 @@ class ResNet18(nn.Module):
         x = self.model(x)
         return x
 
+
+class ResNet50(nn.Module):
+    def __init__(self,n_classes,freeze=True):
+        super().__init__()
+        self.weights = ResNet50_Weights.DEFAULT
+        self.model = resnet50(weights=self.weights)
+        
+        if n_classes != 1000:
+            self.model.fc = nn.Linear(2048,n_classes)
+        
+        if freeze:
+            for name,params in self.model.named_parameters():
+                if name in ['fc.weight','fc.bias']:
+                    continue
+                params.requires_grad = False
+    
+    def forward(self,x):
+        x = self.model(x)
+        return x
+    
 class ViTBase(nn.Module):
     def __init__(self,n_classes,freeze=True):
         super().__init__()
@@ -43,8 +62,6 @@ class ViTBase(nn.Module):
                 params.requires_grad = False
             for param in self.model.head.parameters():
                 param.requires_grad = True
-            for name,params in self.model.named_parameters():
-                print(name,params.requires_grad)
                 
     def forward(self,x):
         x = self.model(x)

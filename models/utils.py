@@ -37,9 +37,11 @@ def train_step(model: nn.Module,
     model.train()
     total_loss = 0
     pred_list = None
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
 
     for i,batch in enumerate(dataloader):
         if modeltype != "clip":
+            grad = True
             x_batch, y_batch = batch
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
             optimizer.zero_grad()
@@ -49,23 +51,34 @@ def train_step(model: nn.Module,
             pred_list = torch.cat([pred_list,torch.argmax(pred,dim=1) == y_batch]) if pred_list is not None else torch.argmax(pred,dim=1) == y_batch
         
         else:
+            grad =True # CLIP Model doesn't require gradients by default (no training required)
             optimizer.zero_grad()
+            x_batch, y_batch = batch
+            x_batch, y_batch = x_batch.to(device), y_batch.to(device)
+
+            captions = cifar10_label_to_text(y_batch.cpu().numpy())
+            encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
+            encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
+            batch = {'image': x_batch, 'caption': encoded_captions}
+
             batch = move_tensors_to_device(batch,device)
-            preds = model(batch)
-            labels = torch.arange(preds.shape[0]).to(device)
-            loss_i = loss(preds, labels) 
-            loss_t = loss(preds.T, labels) 
+            pred = model(batch)
+            loss_i = loss_fn(pred, y_batch) 
+            loss_t = loss_fn(pred.T, y_batch) 
             loss = (loss_i + loss_t)/2
             total_loss += loss.item()
+            # print(torch.argmax(pred,dim=1),y_batch)
+            pred_list = torch.cat([pred_list,torch.argmax(pred,dim=1) == y_batch]) if pred_list is not None else torch.argmax(pred,dim=1) == y_batch
 
-        if i % (len(dataloader)//20) == 0 or i == len(dataloader)-1:
-            print("Batch",i,":")
-            print(f"Loss: {total_loss/(i+1):.4f}")
-            accuracy = pred_list.float().mean().cpu().numpy()
-            print(f"Accuracy: {accuracy:.4f}")
+        # if i % (len(dataloader)//20) == 0 or i == len(dataloader)-1:
+        #     print("Batch",i,":")
+        #     print(f"Loss: {total_loss/(i+1):.4f}")
+        #     accuracy = pred_list.float().mean().cpu().numpy()
+        #     print(f"Accuracy: {accuracy:.4f}")
 
-        loss.backward()
-        optimizer.step()
+        if grad:
+            loss.backward()
+            optimizer.step()
 
     return total_loss/len(dataloader),pred_list.float().mean().cpu().numpy()
 
@@ -100,22 +113,23 @@ def eval_step(model: nn.Module,
             loss = loss_fn(pred,y_batch.reshape(-1).long())
             
         else:
-            batch["captions"] = encoded_captions
+            image, y_batch = batch
+            image, y_batch = image.to(device), y_batch.to(device)
+            batch = {'image': image, 'caption': encoded_captions}
             batch = move_tensors_to_device(batch,device)
-            preds = model(batch)
-            labels = torch.arange(preds.shape[0]).to(device)
-            loss = loss_fn(preds, labels) 
+            pred = model(batch)
+            loss = loss_fn(pred, y_batch) 
             total_loss += loss.item()
-        
+            #print(torch.argmax(pred,dim=1),y_batch)
         pred_list = torch.cat([pred_list,torch.argmax(pred,dim=1) == y_batch]) if pred_list is not None else torch.argmax(pred,dim=1) == y_batch
 
         total_loss += loss.item()
             
-        if i % (len(dataloader)//20) == 0 or i == len(dataloader)-1:
-            print("Batch",i,":")
-            print(f"Loss: {total_loss/(i+1):.4f}")
-            accuracy = pred_list.float().mean().cpu().numpy()
-            print(f"Accuracy: {accuracy:.4f}")
+        # if i % (len(dataloader)//20) == 0 or i == len(dataloader)-1:
+        #     print("Batch",i,":")
+        #     print(f"Loss: {total_loss/(i+1):.4f}")
+        #     accuracy = pred_list.float().mean().cpu().numpy()
+        #     print(f"Accuracy: {accuracy:.4f}")
 
     total_loss /= len(dataloader)
 
@@ -125,7 +139,7 @@ def eval_step(model: nn.Module,
 
 class CLIPDataset(Dataset):
     def __init__(
-        self, dataset, images, captions,transform, max_length
+        self, images, captions,transform, max_length
     ):
         """
         Initializes the dataset with image filenames, captions, a tokenizer function, and optional image transforms.
@@ -139,7 +153,6 @@ class CLIPDataset(Dataset):
         self.captions = captions
         self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
         self.transform = transform
-        self.dataset = dataset
 
         # Tokenize all captions
         self.encoded_captions = self.tokenizer(captions, padding=True, truncation=True, max_length = max_length)
@@ -153,7 +166,7 @@ class CLIPDataset(Dataset):
         """
         # Get encoded caption
         encoded_caption = {key: torch.tensor(values[idx]) for key, values in self.encoded_captions.items()}
-        
+        image = self.images[idx]
         if self.transform:
             image = self.transform(image)
         
@@ -173,8 +186,17 @@ class CLIPDataset(Dataset):
 
 def cifar10_label_to_text(labels):
     
-    class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-
+    class_names = ['an airplane', 'an automobile', 'a bird', 'a cat', 'a deer', 'a dog', 'a frog', 'a horse', 'a ship', 'a truck']
+    sentences = ["a flying airplane in the sky",
+                 "a car driving on the road",
+                 "a small bird perched on a branch",
+                  "a domestic cat sitting on the floor",
+                  "a wild deer standing in a forest",
+                  "a friendly dog playing outside",
+                  "a frog hopping near a pond.",
+                  "a running horse in a field",
+                  "a large ship sailing in the ocean",
+                  "a big truck transporting goods"]
     return [f"This is a photo of a {class_names[label]}." for label in labels]
 
 class CIFAR10_CLIPDataset(CLIPDataset):
@@ -194,7 +216,7 @@ class CustomDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return len(self.images)
+        return len(self.data)
 
     def __getitem__(self, idx):
         image = self.data[idx]
@@ -230,11 +252,12 @@ class DataLoaders(DataLoader):
                     for class_label in range(10):
                         shuffled_images.append(class_images[class_label][i])
                         shuffled_labels.append(class_label)
-                train = CustomDataset(shuffled_images,shuffled_labels)
-                self.train_dataset = CIFAR10_CLIPDataset(train,transform=transforms_clip_vit,max_length=200)
-                self.test_dataset = CIFAR10_CLIPDataset(test_dataset,transform=transforms_clip_vit,max_length=200)
-                self.train_loader = DataLoader(self.train_dataset.dataset,batch_size=10,shuffle=False)
-                self.test_loader = DataLoader(self.test_dataset.dataset,batch_size=batch_size,shuffle=True)
+                train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_clip_vit)
+                test_dataset = CustomDataset(test_dataset.data,test_dataset.targets,transform=transforms_clip_vit)
+                # self.train_dataset = CIFAR10_CLIPDataset(train,transform=transforms_clip_vit,max_length=200)
+                # self.test_dataset = CIFAR10_CLIPDataset(test_dataset,transform=transforms_clip_vit,max_length=200)
+                self.train_loader = DataLoader(train_dataset,batch_size=10,shuffle=False)
+                self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=True)
     def get_loaders(self):
         return self.train_loader, self.test_loader
     
