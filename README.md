@@ -41,5 +41,21 @@ The complete implementation of each of the models with the necessary utility fun
 | ViT-Base_Patch16_224   |  3   | 58.10 | 61.84 |
 | ViT_Base_Patch16_CLIP_224 |  3   | 41.16 | 56.25 |
 
+## Task 4: Inductive Biases of Models: Semantic Biases
+### Datasets Creation:
+#### Shape Bias Dataset Creation
+#### Texture Bias Dataset Creation
+#### Color Bias Dataset Creation
+
+### Results
+
+## Task 5: Inductive Biases of Models: Locality Biases 
+### Datasets Creation (CIFAR10 Modification):
+#### Localized Noise Injection
+#### Global Style Changes
+#### Scrambled Images
+
+
+
 
 
