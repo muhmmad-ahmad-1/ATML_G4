@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader,Dataset,ConcatDataset
 from transformers import DistilBertTokenizer
-from models.transforms import transforms_clip_vit, transforms_resnet
+from models.transforms import transforms_clip_vit, transforms_resnet, transforms_vit
 from torchvision import datasets
+import numpy as np
 import os
 import random
 
@@ -63,6 +64,8 @@ def train_step(model: nn.Module,
                 captions = cifar10_label_to_text(y_batch.cpu().numpy())
             elif data == "pacs":
                 captions = PACS_label_to_text(y_batch.cpu().numpy())
+            elif data == "svhn":
+                captions = SVHN_label_to_text(y_batch.cpu().numpy())
             encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
             encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
             batch = {'image': x_batch, 'caption': encoded_captions}
@@ -106,14 +109,14 @@ def eval_step(model: nn.Module,
     if modeltype == 'clip':
         if data == "cifar10":        
             captions = cifar10_label_to_text([0,1,2,3,4,5,6,7,8,9])
-            tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-            encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
-            encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
         elif data == "pacs":
             captions = PACS_label_to_text([0,1,2,3,4,5,6])
-            tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-            encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
-            encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
+        elif data == "svhn":
+            captions = SVHN_label_to_text([0,1,2,3,4,5,6,7,8,9])
+        
+        tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+        encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
+        encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
                 
     for i,batch in enumerate(dataloader):
         if modeltype != 'clip':
@@ -226,9 +229,12 @@ class DataLoaders(DataLoader):
             self.train_loader = DataLoader(train_dataset,batch_size=batch_size,shuffle=shuffle)
             self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=shuffle)
         else:
-            if data == "cifar10":
-                images = train_dataset.data      
-                labels = train_dataset.targets 
+            if data == "cifar10" or data == "svhn":
+                images = train_dataset.data   
+                if data == "cifar10":   
+                    labels = train_dataset.targets 
+                else:
+                    labels = train_dataset.labels
 
                 class_images = {i: [] for i in range(10)}
 
@@ -237,14 +243,20 @@ class DataLoaders(DataLoader):
 
                 shuffled_images = []
                 shuffled_labels = []
-                indices = range(len(class_images[0]))
-                random.shuffle(indices)
-                for i in range(indices):
-                    for class_label in range(7):
-                        shuffled_images.append(class_images[class_label][i])
+                min_samples_per_class = min([len(class_images[i]) for i in range(10)])
+                samples = list(range(min_samples_per_class))
+                random.shuffle(samples)
+                random.shuffle(samples)
+                for i in samples:
+                    for class_label in range(10):
+                        image = class_images[class_label][i] if data == "cifar10" else class_images[class_label][i].reshape(32,32,3)
+                        shuffled_images.append(image)
                         shuffled_labels.append(class_label)
-                train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_clip_vit)
-                test_dataset = CustomDataset(test_dataset.data,test_dataset.targets,transform=transforms_clip_vit)
+                train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_vit)
+                if data == "cifar10":
+                    test_dataset = CustomDataset(test_dataset.data,test_dataset.targets,transform=transforms_clip_vit)
+                elif data == "svhn":
+                    test_dataset = CustomDataset(test_dataset.data.reshape(-1,32,32,3),test_dataset.labels,transform=transforms_vit)
                 self.train_loader = DataLoader(train_dataset,batch_size=10,shuffle=False)
                 self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=True)
     def get_loaders(self):
@@ -327,16 +339,16 @@ def PACS_label_to_text(labels):
 
 def CIFAR100_Splits(cifar100_images,cifar100_labels,group,modeltype):
     groups = {
-    9: ["cattle", "shrew", "motorcycle", "squirrel", "snake", "trout", "sea", "tractor", "bus", "pickup"],
+    9: ["cattle", "shrew", "motorcycle", "squirrel", "snake", "trout", "sea", "tractor", "bus", "pickup_truck"],
     8: ["bear", "elephant", "leopard", "camel", "lizard", "rabbit", "beaver", "spider", "raccoon", "orchid"],
     7: ["lion", "mountain", "crab", "bicycle", "turtle", "beetle", "train", "mouse", "snail", "otter"],
-    6: ["possum", "shark", "forest", "pine", "dinosaur", "boy", "porcupine", "wolf", "road", "butterfly"], 
+    6: ["possum", "shark", "forest", "pine_tree", "dinosaur", "boy", "porcupine", "wolf", "road", "butterfly"], 
     5: ["girl", "rocket", "man", "tiger", "bee", "tank", "whale", "baby", "kangaroo", "dolphin"],
-    4: ["willow", "worm", "chimpanzee", "skunk", "cup", "mushroom", "oak", "cockroach", "crocodile", "hamster"], 
-    3: ["castle", "can", "bridge", "lobster", "house", "bed", "fox", "maple", "pear", "woman"], 
-    2: ["palm", "streetcar", "pepper", "keyboard", "bottle", "seal", "rose", "couch", "caterpillar", "goldfish"], 
+    4: ["willow_tree", "worm", "chimpanzee", "skunk", "cup", "mushroom", "oak_tree", "cockroach", "crocodile", "hamster"], 
+    3: ["castle", "can", "bridge", "lobster", "house", "bed", "fox", "maple_tree", "pear", "woman"], 
+    2: ["palm_tree", "streetcar", "sweet_pepper", "keyboard", "bottle", "seal", "rose", "couch", "caterpillar", "aquarium_fish"], 
     1: ["flatfish", "apple", "orange", "plate", "table", "tulip", "bowl", "television", "skyscraper", "ray"], 
-    0: ["wardrobe", "lamp", "plain", "lawnmower", "chair", "poppy", "clock", "cloud", "sunflower", "telephone"]
+    0: ["wardrobe", "lamp", "plain", "lawn_mower", "chair", "poppy", "clock", "cloud", "sunflower", "telephone"]
     }
     
     # cifar10_groups = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
@@ -378,6 +390,12 @@ def CIFAR100_Splits(cifar100_images,cifar100_labels,group,modeltype):
     dataset = CustomDataset(filtered_images,filtered_labels,transform=transform)
     
     return dataset    
+
+#`````````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+def SVHN_label_to_text(labels):
+    
+    class_names = ['zero','one','two','three','four','five','six','seven','eight','nine']
+    return [f"This is an image of the number {class_names[label]}." for label in labels]
 
 
        
