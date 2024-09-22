@@ -25,7 +25,7 @@ The complete implementation of each of the models with the necessary utility fun
 | ViT_Base_Patch16_CLIP_224 |  3   | 95.44 | 95.41 |
 
 ## Task 3: Evaluation for Domain Generalization
-* PCAS Dataset: All Models are trained on 3 epochs
+* PCAS Dataset: All Models are trained on 3 epochs (Covariate Shift)
 
 | Model                  | Photo  | Art    | Cartoon | Sketch |
 | :--------------------- | :----: | :----: | :-----: | :----: |
@@ -33,8 +33,15 @@ The complete implementation of each of the models with the necessary utility fun
 | ViT-Base_Patch16_224   | 88.67  | 77.39  | 90.36   | 64.52  |
 | ViT_Base_Patch16_CLIP_224 | 85.93  | 69.84  | 98.44   | 70.40  |
 
-* CIFAR100 Splits
+* CIFAR100 Splits: All models trained on 3 epochs (CIFAR10) (Concept/Semantic Shift)
+Test the models on each of the 10 splits of CIFAR100 with lower split number indicating greater concept shift
+No finetuning is done on CIFAR100 dataset
 
+| Model                  |  0  |  1 |  2  |  3  |  4  |  5 |  6  |  7 |  8  | 9 |
+| :--------------------- | :----: | :----: | :-----: | :----: | :----: | :----: | :-----: | :----: | :-----: | :----: |
+| ResNet-50              | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ViT-Base_Patch16_224   | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ViT_Base_Patch16_CLIP_224 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 
 
