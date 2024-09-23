@@ -27,7 +27,7 @@ The complete implementation of each of the models with the necessary utility fun
 ## Task 3: Evaluation for Domain Generalization
 * PCAS Dataset: All Models are trained on 3 epochs (Covariate Shift)
 
-| Model                  | Photo  | Art    | Cartoon | Sketch |
+| Model                  | Art  | Cartoon    | Photo | Sketch |
 | :--------------------- | :----: | :----: | :-----: | :----: |
 | ResNet-50              | 63.82  | 53.11  | 92.57   | 49.45  |
 | ViT-Base_Patch16_224   | 88.67  | 77.39  | 90.36   | 64.52  |
