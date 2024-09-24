@@ -8,3 +8,6 @@
 *.png
 /Task_2_Benchmarking
 *.zip 
+test.ipynb
+*.jfif
+/*.jpg

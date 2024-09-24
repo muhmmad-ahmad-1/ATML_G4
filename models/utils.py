@@ -230,7 +230,7 @@ class DataLoaders(DataLoader):
             self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=shuffle)
         else:
             if data == "cifar10" or data == "svhn":
-                images = train_dataset.data   
+                images = [im for im, _ in train_dataset]     
                 if data == "cifar10":   
                     labels = train_dataset.targets 
                 else:
@@ -254,9 +254,11 @@ class DataLoaders(DataLoader):
                         shuffled_labels.append(class_label)
                 train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_vit)
                 if data == "cifar10":
-                    test_dataset = CustomDataset(test_dataset.data,test_dataset.targets,transform=transforms_clip_vit)
+                    test_data = [img for img, _ in test_dataset]
+                    test_dataset = CustomDataset(test_data,test_dataset.targets,transform=transforms_clip_vit)
                 elif data == "svhn":
-                    test_dataset = CustomDataset(test_dataset.data.reshape(-1,32,32,3),test_dataset.labels,transform=transforms_vit)
+                    test_data = [img for img, _ in test_dataset]    
+                    test_dataset = CustomDataset(test_data.reshape(-1,32,32,3),test_dataset.labels,transform=transforms_vit)
                 self.train_loader = DataLoader(train_dataset,batch_size=10,shuffle=False)
                 self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=True)
     def get_loaders(self):
