@@ -105,7 +105,7 @@ The style image taken was "A Starry Night" by Van Gogh. The style transfer was h
 #### Scrambled Images
 Each image is divided into 16 patches of 8x8(x3) and the patches are randomly permuted.
 
-Each of these (apart from the style change) is implemented as a custom transform which can be joined with typical transforms from the "transforms" library from torchvision. Consequently, a complete presentation of the resultant dataset is redundant. We do however show some examples of the resultant images after transform [here](http://insertdrivelink.com). The complete style transfer dataset can be seen [here](http://insertdrivelink.com).
+Each of these (apart from the style change) is implemented as a custom transform which can be joined with typical transforms from the "transforms" library from torchvision. Consequently, a complete presentation of the resultant dataset is redundant. We do however show some examples of the resultant images after transform [here]([http://insertdrivelink.com](https://pern-my.sharepoint.com/:u:/g/personal/25100076_lums_edu_pk/Efn29T9wF8NOnJ2-C440D2MB2t9K-kl0ZJGsZ3TLaEU7mw?e=Jmd6yP)). The complete style transfer dataset can be seen [here]([http://insertdrivelink.com](https://pern-my.sharepoint.com/:u:/g/personal/25100076_lums_edu_pk/EanWMSPBKk9KlxtcI9oDqIwBqSdjM8PbtyMyRLm8K3cu6A?e=2NIZyX)).
 
 ### Results
 All results are of test acccuracies:
