@@ -15,7 +15,10 @@
 The complete implementation of each of the models with the necessary utility functions can be found [here](models/model.py).
 
 ## Task 1: Text-to-Image Generative Model as Zero-Shot Classifier
+A pipeline was developed for zero-shot image classification in which an input image and a predefined list of classes are processed. The method involves transforming each class into a corresponding text prompt, followed by converting the input image into its latent representation. 
+The latent image is put through a process of noise, after which an iterative process of denoising is performed for N iterations. During each iteration a random starting point for denoising is chosen and the image is denoised conditioned on all prompts, resulting in a series of N reconstructed images for each class/prompt.
 
+Following the reconstruction process, the norm-squared of the difference between each class-specific reconstructed image and the original image is calculated, producing a score matrix. This score matrix is then multiplied by a standard weight vector, and the argmin class label is returned.
 ## Task 2: Evaluation on an IID Dataset
 | Model             | Epochs Trained | Top-1 Accuracy (Train) | Top-1 Accuracy (Test)
 | :---------------- | :------: | :----: | :---: |
