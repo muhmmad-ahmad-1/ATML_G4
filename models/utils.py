@@ -243,9 +243,9 @@ class DataLoaders(DataLoader):
             self.train_loader = DataLoader(train_dataset,batch_size=batch_size,shuffle=shuffle)
             self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=shuffle)
         else:
-            if data == "cifar10" or data == "svhn" or data == "stl10":
+            if data == "cifar10" or data == "svhn" or data == "stl10" or data == "texture":
                 images = [im for im, _ in train_dataset]     
-                if data == "cifar10" or data == "stl10":   
+                if data == "cifar10" or data == "stl10" or data=="texture":   
                     labels = train_dataset.targets 
                 else:
                     labels = train_dataset.labels
@@ -273,6 +273,9 @@ class DataLoaders(DataLoader):
                 elif data == "svhn":
                     test_data = [img for img, _ in test_dataset]    
                     test_dataset = CustomDataset(test_data,test_dataset.labels,transform=transforms_vit)
+                elif data == "texture":
+                    test_data = [img for img, _ in test_dataset]    
+                    test_dataset = CustomDataset(test_data,test_dataset.targets,transform=transforms_vit)
                 self.train_loader = DataLoader(train_dataset,batch_size=10,shuffle=False)
                 self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=True)
     def get_loaders(self):

@@ -19,7 +19,11 @@ A pipeline was developed for zero-shot image classification in which an input im
 The latent image is put through a process of noise, after which an iterative process of denoising is performed for N iterations. During each iteration a random starting point for denoising is chosen and the image is denoised conditioned on all prompts, resulting in a series of N reconstructed images for each class/prompt.
 
 Following the reconstruction process, the norm-squared of the difference between each class-specific reconstructed image and the original image is calculated, producing a score matrix. This score matrix is then multiplied by a standard weight vector, and the argmin class label is returned.
+
 ## Task 2: Evaluation on an IID Dataset
+
+Each model is trained on the CIFAR10 dataset and tested on its test split. No data augmentations have been applied during training, only a resizing to 256x256 followed by a center crop to 224x224 and a predefined normalization.
+
 | Model             | Epochs Trained | Top-1 Accuracy (Train) | Top-1 Accuracy (Test)
 | :---------------- | :------: | :----: | :---: |
 | ResNet-18        |   30   | 79.05 | 78.21 | 
@@ -49,7 +53,7 @@ Following the reconstruction process, the norm-squared of the difference between
 STL-10 dataset:
 airplane, bird, car, cat, dog, ship, truck,deer, horse,monkey
 
-About the Dataset: STL-10 is a subset of TinyImageNet just like CIFAR-10 but has a higher resolution
+About the Dataset: STL-10 is a subset of TinyImageNet just like CIFAR-10 but has a higher resolution (96x96 vs 32x32)
 
 #### Shape Bias Dataset Creation
 1) Image Processing Techniques to get Silhouette and Outline
@@ -57,10 +61,32 @@ About the Dataset: STL-10 is a subset of TinyImageNet just like CIFAR-10 but has
 1) Texture Extraction with Shape Removal/Distortion with Techniques like Random Affine Transformations for Patch Focusing or Distorting Filters
 
 #### Color Bias Dataset Creation
-1) Colored MNIST (Directly Used)
-2) Color retained STL-10 with outline removal through blurring (Gaussian filter)
+1) Colored MNIST (in our synthetic variant both train and test classes can have a random color but the test set of colors differs strakly from the train set of colors i.e. an environment shift)
+2) Color retained STL-10 with outline removal through blurring (Gaussian filter and Upsampling followed by Downsampling)
 
 ### Results
+All results are of test acccuracies. Note that the transforms are applied to both train and test set, otherwise there is a sharp decrease in performance all across which does not allow for any measurement of any biases. Practically, this means that we have to try to tune the model to become mindful about the presence to evaluate whether it is capable of becoming mindful of them, i.e. it has some intrinsic bias that it can utilize (given a frozen backbone).  
+
+Raw Accuracies:
+| Model             | STL10 | MNIST | MvH |
+| :---------------- | :------: | :----: | :---: |
+| ResNet-50           |   95.76  | 84.22 |  |
+| ViT-Base_Patch16_224   |  99.55  | 90.47  |  |
+| ViT_Base_Patch16_CLIP_224 |  98.83  | 83.97 |  |
+
+| Model             | Silhouette | Outline  | Blur  |Colored MNIST | Distort (Texture) | Random Patch (Texture) | MvH Texture |
+| :---------------- | :------: | :----: | :---: | :---: | :---: | :----: | :----: |
+| ResNet-50           |  50.36   | 49.46 | 49.05 | 27.09 | 57.41 | 69.24 | 37.63 |
+| ViT-Base_Patch16_224   |  28.06  | 64.84  | 63.53 | 81.69 | 75.00 | 96.00 |44.38 |
+| ViT_Base_Patch16_CLIP_224 |  45.86  | 61.09 | 52.54 | 81.33 | 59.66 |88.49 | 36.12 |
+
+| Model             | Shape Bias | Color Bias | Texture Bias |
+| :---------------- | :------: | :----: | :---: |
+| ResNet-50           |  0.516  | 0.678 |  |
+| ViT-Base_Patch16_224   | 0.651 | 0.097 |  |
+| ViT_Base_Patch16_CLIP_224 | 0.618 | 0.031 |  |
+
+
 
 ## Task 5: Inductive Biases of Models: Locality Biases 
 ### Datasets Creation (CIFAR10 Modification):
@@ -73,7 +99,7 @@ We introduce this in two ways:
 Each channel is perturbed (subtraction) by a random integer between 0 and 255 in all of its pixel values, taking the absolute value of the resultant pixel values to allow for negative perturbations.
 
 * A style shift through a VGG Model 
-(TODO)
+The style image taken was "A Starry Night" by Van Gogh. The style transfer was halted prematurely to ensure that only colors are changed, heavy style transfers on a lower resolution image leads to destruction of the identity(shape and other features) of the image which is NOT what we wish for. 
 
 
 #### Scrambled Images
@@ -85,9 +111,9 @@ Each of these (apart from the style change) is implemented as a custom transform
 All results are of test acccuracies:
 | Model             | Raw  | Noise  | Color  | Style | Scramble  |
 | :---------------- | :------: | :----: | :---: | :---: | :---: |
-| ResNet-50           |   78.01  | 65.87 | 27.53 | | 35.86 |
-| ViT-Base_Patch16_224   |  94.44  | 91.28  | 62.40 | | 65.56 |
-| ViT_Base_Patch16_CLIP_224 |  97.11  | 96.59 | 48.10 | | 45.35 |
+| ResNet-50           |   78.01  | 65.87 | 27.53 | 55.75 | 35.86 |
+| ViT-Base_Patch16_224   |  94.44  | 91.28  | 62.40 | 40.35 | 65.56 |
+| ViT_Base_Patch16_CLIP_224 |  97.11  | 96.59 | 48.10 | 34.65 | 45.35 |
 
 
 
