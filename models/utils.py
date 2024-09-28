@@ -66,6 +66,11 @@ def train_step(model: nn.Module,
                 captions = PACS_label_to_text(y_batch.cpu().numpy())
             elif data == "svhn":
                 captions = SVHN_label_to_text(y_batch.cpu().numpy())
+            elif data == "stl10":
+                captions = STL10_label_to_text(y_batch.cpu().numpy())
+            elif data == "texture":
+                captions = texture_label_to_text(y_batch.cpu().numpy())
+
             encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
             encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
             batch = {'image': x_batch, 'caption': encoded_captions}
@@ -113,7 +118,11 @@ def eval_step(model: nn.Module,
             captions = PACS_label_to_text([0,1,2,3,4,5,6])
         elif data == "svhn":
             captions = SVHN_label_to_text([0,1,2,3,4,5,6,7,8,9])
-        
+        elif data == "stl10":
+            captions = STL10_label_to_text([0,1,2,3,4,5,6,7,8,9])
+        elif data == "texture": 
+            captions = texture_label_to_text([0,1,2,3,4,5,6,7,8,9])
+            
         tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
         encoded_captions = tokenizer(captions, padding=True, truncation=True, max_length = 200)
         encoded_captions =  {key: torch.tensor(values) for key, values in encoded_captions.items()}
@@ -202,6 +211,11 @@ def cifar10_label_to_text(labels):
     class_names = ['an airplane', 'an automobile', 'a bird', 'a cat', 'a deer', 'a dog', 'a frog', 'a horse', 'a ship', 'a truck']
     return [f"This is a photo of a {class_names[label]}." for label in labels]
 
+def texture_label_to_text(labels):    
+    class_names = ['an airplane', 'a bear', 'a bicycle', 'a bird', 'a car', 'a cat', 'a chair', 'a dog', 'an elephant', 'a truck']
+    # class_names = ['an airplane', 'a bear', 'a bicycle', 'a bird', 'a boat', 'a bottle', 'a car', 'a cat', 'a chair', 'a clock', 'a dog', 'an elephant', 'a keyboard', 'a knife', 'an oven', 'a truck']
+    return [f"This is a photo of {class_names[label]}." for label in labels]
+
 class CustomDataset(Dataset):
     def __init__(self, images, labels, transform=None):
         self.data = images
@@ -229,9 +243,9 @@ class DataLoaders(DataLoader):
             self.train_loader = DataLoader(train_dataset,batch_size=batch_size,shuffle=shuffle)
             self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=shuffle)
         else:
-            if data == "cifar10" or data == "svhn":
+            if data == "cifar10" or data == "svhn" or data == "stl10":
                 images = [im for im, _ in train_dataset]     
-                if data == "cifar10":   
+                if data == "cifar10" or data == "stl10":   
                     labels = train_dataset.targets 
                 else:
                     labels = train_dataset.labels
@@ -249,16 +263,16 @@ class DataLoaders(DataLoader):
                 random.shuffle(samples)
                 for i in samples:
                     for class_label in range(10):
-                        image = class_images[class_label][i] if data == "cifar10" else class_images[class_label][i].reshape(32,32,3)
+                        image = class_images[class_label][i]
                         shuffled_images.append(image)
                         shuffled_labels.append(class_label)
-                train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_vit)
-                if data == "cifar10":
+                train_dataset = CustomDataset(shuffled_images,shuffled_labels,transform=transforms_clip_vit)
+                if data == "cifar10" or data == "stl10":
                     test_data = [img for img, _ in test_dataset]
                     test_dataset = CustomDataset(test_data,test_dataset.targets,transform=transforms_clip_vit)
                 elif data == "svhn":
                     test_data = [img for img, _ in test_dataset]    
-                    test_dataset = CustomDataset(test_data.reshape(-1,32,32,3),test_dataset.labels,transform=transforms_vit)
+                    test_dataset = CustomDataset(test_data,test_dataset.labels,transform=transforms_vit)
                 self.train_loader = DataLoader(train_dataset,batch_size=10,shuffle=False)
                 self.test_loader = DataLoader(test_dataset,batch_size=batch_size,shuffle=True)
     def get_loaders(self):
@@ -398,6 +412,11 @@ def SVHN_label_to_text(labels):
     
     class_names = ['zero','one','two','three','four','five','six','seven','eight','nine']
     return [f"This is an image of the number {class_names[label]}." for label in labels]
+
+def STL10_label_to_text(labels):
+    
+    class_names = ['airplane', 'bird', 'car', 'cat', 'deer', 'dog', 'horse', 'monkey', 'ship', 'truck']
+    return [f"This is an image of a {class_names[label]}." for label in labels] 
 
 
        

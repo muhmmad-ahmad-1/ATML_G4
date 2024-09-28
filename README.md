@@ -43,26 +43,19 @@ The complete implementation of each of the models with the necessary utility fun
 
 ## Task 4: Inductive Biases of Models: Semantic Biases
 ### Datasets Creation:
-STL-10 and Model vs Human datasets overlap in 7 classes:
-airplane, bird, car, cat, dog, ship/boat, truck
-Classes in STL-10 that don't overlap are:
-deer, horse, monkey
-Classes in Model vs Human dataset that don't overlap are:
-bear, bicycle, bottle, chair, clock, elephant, keyboard, knife
-We additionally choose the horse class from STL-10 and bicycle, and elephant class from Model vs Human datasets.
+STL-10 dataset:
+airplane, bird, car, cat, dog, ship, truck,deer, horse,monkey
 
-All in all, this becomes a 10 class classification problem. The images from STL-10 are 96x96 while those from Model vs Human are 224x224. The motivation behind merging both of these is the high support of Human vs Model in providing different benchmark which captures each of the three biases we want to evaluate and the relative ease of modifying STL-10 to elicit these biases (for example, the higher resolution makes it easier to perform style transfer for texture and to extract outlines using canny edge detection for shape biases). Color biases are easily done using a random color shift to evaluate the performance of model in the absence of a 'familiar' color. Conversely, a removal of the shape and retaining the 'familiar' color alone is another way to evaluate color bias. Both are performed.  
+About the Dataset: STL-10 is a subset of TinyImageNet just like CIFAR-10 but has a higher resolution
 
-We merge the two subsets of the datasets which contain these classes
 #### Shape Bias Dataset Creation
-1) Subset of Human vs Model Shape, Silhouette, and Sketch Datasets Merged with STL-10 Outline using Canny Edge Detection
+1) Image Processing Techniques to get Silhouette and Outline
 #### Texture Bias Dataset Creation
-1) Subset of Human vs Model Cue Conflict and Texture Dataset Merged with STL-10 Stylized using arbitrary-image-stylization-v1-256
+1) Texture Extraction with Shape Removal/Distortion with Techniques like Random Affine Transformations for Patch Focusing or Distorting Filters
+
 #### Color Bias Dataset Creation
 1) Colored MNIST (Directly Used)
-2) Randomly Color Shifted STL-10
-3) Randomly Color Shifted MNIST trained on Class Specific Color Shifting 
-4) Color retained STL-10 with outline removal
+2) Color retained STL-10 with outline removal through blurring (Gaussian filter)
 
 ### Results
 

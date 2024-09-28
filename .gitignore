@@ -3,6 +3,7 @@
 *.csv
 *.log
 /__pycache__
+/models/__pycache__
 /PACS
 *.jpg
 *.png
@@ -11,3 +12,4 @@
 test.ipynb
 *.jfif
 /*.jpg
+cifar100_splits_eval.ipynb
