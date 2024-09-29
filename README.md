@@ -2,7 +2,7 @@
 
 ## Task 0: Model Selection
 * Discriminative Models:
-1) ResNet-18
+1) ResNet-18 (used in some tasks)
 2) ResNet-50
 3) ViT-Base_Patch16_224
 
@@ -70,9 +70,9 @@ All results are of test acccuracies. Note that the transforms are applied to bot
 Raw Accuracies:
 | Model             | STL10 | MNIST | MvH |
 | :---------------- | :------: | :----: | :---: |
-| ResNet-50           |   95.76  | 84.22 |  |
-| ViT-Base_Patch16_224   |  99.55  | 90.47  |  |
-| ViT_Base_Patch16_CLIP_224 |  98.83  | 83.97 |  |
+| ResNet-50           |   95.76  | 84.22 | 90.63 |
+| ViT-Base_Patch16_224   |  99.55  | 90.47  | 96.25 |
+| ViT_Base_Patch16_CLIP_224 |  98.83  | 83.97 | 98.75 |
 
 | Model             | Silhouette | Outline  | Blur  |Colored MNIST | Distort (Texture) | Random Patch (Texture) | MvH Texture |
 | :---------------- | :------: | :----: | :---: | :---: | :---: | :----: | :----: |
