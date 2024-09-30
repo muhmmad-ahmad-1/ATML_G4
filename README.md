@@ -12,7 +12,7 @@
 * Diffusion Zero-Shot Classifier (for Task 1):
 1) stable-diffusion-v1-4
 
-The complete implementation of each of the models with the necessary utility functions can be found [here](models/model.py).
+The complete implementation of each of the models with the necessary utility functions can be found [here](models/model.py). The necessary transforms for most tasks are provided [here](models/transforms.py). All of the self-curated/modified datasets can be downloaded from [here](https://pern-my.sharepoint.com/:f:/g/personal/25100076_lums_edu_pk/EkeBeg6odU9Kp6iLMhGuS1oBMdW6jC4RbIicL0j-OhuWGw?e=sExddX) except for the ColorMNIST, the modifying transform for which can be obtained from [this notebook](task4_color_bias_eval_color_mnist.ipynb). 
 
 ## Task 1: Text-to-Image Generative Model as Zero-Shot Classifier
 A pipeline was developed for zero-shot image classification in which an input image and a predefined list of classes are processed. The method involves transforming each class into a corresponding text prompt, followed by converting the input image into its latent representation. 
