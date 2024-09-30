@@ -82,9 +82,9 @@ Raw Accuracies:
 
 | Model             | Shape Bias | Color Bias | Texture Bias |
 | :---------------- | :------: | :----: | :---: |
-| ResNet-50           |  0.516  | 0.678 |  |
-| ViT-Base_Patch16_224   | 0.651 | 0.097 |  |
-| ViT_Base_Patch16_CLIP_224 | 0.618 | 0.031 |  |
+| ResNet-50           |  0.516  | 0.678 | 0.415 |
+| ViT-Base_Patch16_224   | 0.651 | 0.097 | 0.462 |
+| ViT_Base_Patch16_CLIP_224 | 0.618 | 0.031 | 0.368 |
 
 
 
