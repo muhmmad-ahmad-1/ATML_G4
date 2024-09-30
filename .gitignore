@@ -4,12 +4,7 @@
 *.log
 /__pycache__
 /models/__pycache__
-/PACS
-*.jpg
-*.png
-/Task_2_Benchmarking
-*.zip 
-test.ipynb
-*.jfif
-/*.jpg
-cifar100_splits_eval.ipynb
+/datasets
+/result_csvs
+/task5_cifar10
+/cifar10_stylized
