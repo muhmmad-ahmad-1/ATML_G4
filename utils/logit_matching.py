@@ -159,6 +159,9 @@ def eval(model,test_loader,loss_func,device):
     return total_loss,pred_list.float().mean().cpu().numpy()
 
 def train(student_model,teacher_model,train_loader,optimizer,device,types="basic"):
+    '''
+    Carries out one epoch of training through distillation
+    '''
     total_loss = 0
     pred_list = None
     for params in teacher_model.parameters():

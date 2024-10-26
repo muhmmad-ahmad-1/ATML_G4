@@ -21,8 +21,8 @@ transform_test = transform = transforms.Compose([
 		transforms.Normalize(mean=mean,std=std)
 ])
 
-train = CIFAR100(root='data',train=True,transform=transform_train,download='False')
-test = CIFAR100(root='data',train=False,transform=transform_test,download='False')
+train_data = CIFAR100(root='data',train=True,transform=transform_train,download='False')
+test_data = CIFAR100(root='data',train=False,transform=transform_test,download='False')
 
-train_loader = DataLoader(train,batch_size=BATCH_SIZE, shuffle=True)
-test_loader = DataLoader(test,batch_size=BATCH_SIZE, shuffle=False)
+train_loader = DataLoader(train_data,batch_size=BATCH_SIZE, shuffle=True)
+test_loader = DataLoader(test_data,batch_size=BATCH_SIZE, shuffle=False)
