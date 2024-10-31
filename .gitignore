@@ -1,1 +1,5 @@
 /data
+new.ipynb
+*.pt
+*.h5
+task3_1.ipynb
