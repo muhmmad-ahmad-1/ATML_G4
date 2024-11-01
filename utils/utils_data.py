@@ -55,9 +55,40 @@ transform_test = transform = transforms.Compose([
 
 train_data = CIFAR100(root='data',train=True,transform=transform_train,download='False')
 test_data = CIFAR100(root='data',train=False,transform=transform_test,download='False')
-
 train_loader = DataLoader(train_data,batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(test_data,batch_size=BATCH_SIZE, shuffle=False)
+
+color_jitter_train_transform = transforms.Compose([
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ColorJitter(
+        brightness=0.4,  
+        contrast=0.4,     
+        saturation=0.4,   
+        hue=0.2           
+    ),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=mean, std=std)
+])
+
+color_jitter_test_transform = transforms.Compose([
+    transforms.ToTensor(),
+	 transforms.ColorJitter(
+        brightness=0.4,  
+        contrast=0.4,     
+        saturation=0.4,   
+        hue=0.2           
+    ),
+	transforms.Normalize(mean=mean, std=std)
+])
+
+
+color_jitter_train = CIFAR100(root='data',train=True,transform=color_jitter_train_transform,download='False')
+color_jitter_test = CIFAR100(root='data',train=False,transform=color_jitter_test_transform,download='False')
+color_jitter_train_loader = DataLoader(color_jitter_train,batch_size=BATCH_SIZE, shuffle=True)
+color_jitter_test_loader = DataLoader(color_jitter_test,batch_size=BATCH_SIZE, shuffle=False)
+
+
 
 class CIFAR100IdxSample(CIFAR100):
 	def __init__(self, root, train=True, 

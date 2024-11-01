@@ -50,6 +50,8 @@ class Embed(nn.Module):
 		super(Embed, self).__init__()
 		if in_dim != out_dim:
 			self.linear = nn.Linear(in_dim, out_dim)
+		else:
+			self.linear = nn.Identity()
 		
 	
 	def forward(self, x):
@@ -143,10 +145,10 @@ class ContrastMemory(nn.Module):
 		return out_s, out_t
 
 class CRDNet:
-	def __init__(self,teacher,student,weight=0.75):
+	def __init__(self,teacher,student,weight=0.6):
 		self.student = student
 		self.teacher = teacher
-		self.crd_block = CRD(512,512,256,4096,1.5,0.5,50000)
+		self.crd_block = CRD(512,512,512,4096,2,0.5,50000)
 		self.weight = weight
 	
 	def forward(self,x,target,idx,sample_idx):
@@ -194,6 +196,7 @@ def eval_crd(model,test_loader,device):
     total_loss = 0
     for i, (batch_x, batch_y,train_idx,sample_idx) in enumerate(test_loader):
         batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+        train_idx,sample_idx = train_idx.to(device),sample_idx.to(device)
         logits, loss = model.forward(batch_x, batch_y,train_idx,sample_idx)
         pred_list = torch.cat([pred_list, torch.argmax(logits, dim=1) == batch_y]) if pred_list is not None else torch.argmax(logits, dim=1) == batch_y
         total_loss += loss.item()

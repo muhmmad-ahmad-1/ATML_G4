@@ -1,1 +1,1 @@
-# ATML_G4
+# Assignment 3 : Deep Models Compression

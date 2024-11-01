@@ -3,3 +3,8 @@ new.ipynb
 *.pt
 *.h5
 task3_1.ipynb
+*.csv
+sim_eval.py
+models/__pycache__/
+utils/__pycache__/
+*.pyc

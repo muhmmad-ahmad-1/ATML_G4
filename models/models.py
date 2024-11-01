@@ -241,65 +241,8 @@ def vgg11_f(pretrained=True,n_classes=100,ref_dict=None):
 
         # Load the updated state dict into the custom model
         model.load_state_dict(dict)
-   
-    return model
-
-def vgg16_f(pretrained=True,n_classes=100,ref_dict=None):
-    """VGG 16-layer model (configuration "D")
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = VGG(cfg["D"])
-    if pretrained:
-        print("Loading pretrained weights")
-        # Load pretrained weights from torchvision
-        weights = ref_dict
-        # Load pretrained VGG16
-        dict = model.state_dict()
-
-        # Mapping logic: Directly map "features.*" layers to corresponding "block*.*" layers
-        pretrained_keys = [k for k in weights.keys()]
-        vgg_index = 0
-
-        for block_name in ["block0", "block1", "block2", "block3", "block4"]:
-            # Get the number of layers in each block from the custom model's configuration
-            num_layers_in_block = len([k for k in dict.keys() if block_name in k])
-            for layer_idx in range(num_layers_in_block):
-                # Map VGG16 layer weights to corresponding custom model layer
-                custom_weight_key = f"{block_name}.{layer_idx}.weight"
-                custom_bias_key = f"{block_name}.{layer_idx}.bias"
-                custom_running_mean_key = f"{block_name}.{layer_idx}.running_mean"
-                custom_running_var_key = f"{block_name}.{layer_idx}.running_var"
-                custom_num_batches_tracked_key = f"{block_name}.{layer_idx}.num_batches_tracked"
-                print(
-                    dict.get(custom_weight_key),dict.get(custom_bias_key),dict.get(custom_running_mean_key),dict.get(custom_running_var_key),dict.get(custom_num_batches_tracked_key)
-                )
-                count = 0 
-                if vgg_index < len(pretrained_keys):  # Ensure within range
-                    pretrained_weight_key = pretrained_keys[vgg_index]
-                    pretrained_bias_key = pretrained_keys[vgg_index + 1]
-                    
-                    # Check if the layers match in size before assigning
-                    if dict.get(custom_weight_key) is None and dict.get(custom_bias_key) is None:
-                        continue
-                    if (dict[custom_weight_key].shape == weights[pretrained_weight_key].shape and
-                        dict[custom_bias_key].shape == weights[pretrained_bias_key].shape):
-                        print(f"Mapping: {custom_weight_key} -> {pretrained_weight_key}")
-                        # Assign weights and biases
-                        dict[custom_weight_key] = weights[pretrained_weight_key]
-                        dict[custom_bias_key] = weights[pretrained_bias_key]
-                        count += 2
-                    if dict.get(custom_running_mean_key) is not None and dict.get(custom_running_var_key) is not None:
-                        dict[custom_running_mean_key] = weights[pretrained_keys[vgg_index + 2]]
-                        dict[custom_running_var_key] = weights[pretrained_keys[vgg_index + 3]]
-                        dict[custom_num_batches_tracked_key] = weights[pretrained_keys[vgg_index + 4]]
-                        counts += 3
-                    
-                    # Move to the next layer in the VGG16 `features`
-                    vgg_index += count
-
-        # Load the updated state dict into the custom model
-        model.load_state_dict(dict)
+    if n_classes != 1000:
+        model.classifier[-1] = nn.Linear(4096, n_classes)
     return model
 
 
@@ -395,65 +338,7 @@ def vgg16_f(pretrained=True,n_classes=100,ref_dict=None):
                         dict[custom_running_mean_key] = weights[pretrained_keys[vgg_index + 2]]
                         dict[custom_running_var_key] = weights[pretrained_keys[vgg_index + 3]]
                         dict[custom_num_batches_tracked_key] = weights[pretrained_keys[vgg_index + 4]]
-                        counts += 3
-                    
-                    # Move to the next layer in the VGG16 `features`
-                    vgg_index += count
-
-        # Load the updated state dict into the custom model
-        model.load_state_dict(dict)
-    return model
-
-def vgg16_f(pretrained=True,n_classes=100,ref_dict=None):
-    """VGG 16-layer model (configuration "D")
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = VGG(cfg["D"])
-    if pretrained:
-        print("Loading pretrained weights")
-        # Load pretrained weights from torchvision
-        weights = ref_dict
-        # Load pretrained VGG16
-        dict = model.state_dict()
-
-        # Mapping logic: Directly map "features.*" layers to corresponding "block*.*" layers
-        pretrained_keys = [k for k in weights.keys()]
-        vgg_index = 0
-
-        for block_name in ["block0", "block1", "block2", "block3", "block4"]:
-            # Get the number of layers in each block from the custom model's configuration
-            num_layers_in_block = len([k for k in dict.keys() if block_name in k])
-            for layer_idx in range(num_layers_in_block):
-                # Map VGG16 layer weights to corresponding custom model layer
-                custom_weight_key = f"{block_name}.{layer_idx}.weight"
-                custom_bias_key = f"{block_name}.{layer_idx}.bias"
-                custom_running_mean_key = f"{block_name}.{layer_idx}.running_mean"
-                custom_running_var_key = f"{block_name}.{layer_idx}.running_var"
-                custom_num_batches_tracked_key = f"{block_name}.{layer_idx}.num_batches_tracked"
-                print(
-                    dict.get(custom_weight_key),dict.get(custom_bias_key),dict.get(custom_running_mean_key),dict.get(custom_running_var_key),dict.get(custom_num_batches_tracked_key)
-                )
-                count = 0 
-                if vgg_index < len(pretrained_keys):  # Ensure within range
-                    pretrained_weight_key = pretrained_keys[vgg_index]
-                    pretrained_bias_key = pretrained_keys[vgg_index + 1]
-                    
-                    # Check if the layers match in size before assigning
-                    if dict.get(custom_weight_key) is None and dict.get(custom_bias_key) is None:
-                        continue
-                    if (dict[custom_weight_key].shape == weights[pretrained_weight_key].shape and
-                        dict[custom_bias_key].shape == weights[pretrained_bias_key].shape):
-                        print(f"Mapping: {custom_weight_key} -> {pretrained_weight_key}")
-                        # Assign weights and biases
-                        dict[custom_weight_key] = weights[pretrained_weight_key]
-                        dict[custom_bias_key] = weights[pretrained_bias_key]
-                        count += 2
-                    if dict.get(custom_running_mean_key) is not None and dict.get(custom_running_var_key) is not None:
-                        dict[custom_running_mean_key] = weights[pretrained_keys[vgg_index + 2]]
-                        dict[custom_running_var_key] = weights[pretrained_keys[vgg_index + 3]]
-                        dict[custom_num_batches_tracked_key] = weights[pretrained_keys[vgg_index + 4]]
-                        counts += 3
+                        count += 3
                     
                     # Move to the next layer in the VGG16 `features`
                     vgg_index += count
@@ -567,65 +452,8 @@ def vgg19_f(pretrained=True,n_classes=100,ref_dict=None):
 
         # Load the updated state dict into the custom model
         model.load_state_dict(dict)
-   
-    return model
-
-def vgg16_f(pretrained=True,n_classes=100,ref_dict=None):
-    """VGG 16-layer model (configuration "D")
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = VGG(cfg["D"])
-    if pretrained:
-        print("Loading pretrained weights")
-        # Load pretrained weights from torchvision
-        weights = ref_dict
-        # Load pretrained VGG16
-        dict = model.state_dict()
-
-        # Mapping logic: Directly map "features.*" layers to corresponding "block*.*" layers
-        pretrained_keys = [k for k in weights.keys()]
-        vgg_index = 0
-
-        for block_name in ["block0", "block1", "block2", "block3", "block4"]:
-            # Get the number of layers in each block from the custom model's configuration
-            num_layers_in_block = len([k for k in dict.keys() if block_name in k])
-            for layer_idx in range(num_layers_in_block):
-                # Map VGG16 layer weights to corresponding custom model layer
-                custom_weight_key = f"{block_name}.{layer_idx}.weight"
-                custom_bias_key = f"{block_name}.{layer_idx}.bias"
-                custom_running_mean_key = f"{block_name}.{layer_idx}.running_mean"
-                custom_running_var_key = f"{block_name}.{layer_idx}.running_var"
-                custom_num_batches_tracked_key = f"{block_name}.{layer_idx}.num_batches_tracked"
-                print(
-                    dict.get(custom_weight_key),dict.get(custom_bias_key),dict.get(custom_running_mean_key),dict.get(custom_running_var_key),dict.get(custom_num_batches_tracked_key)
-                )
-                count = 0 
-                if vgg_index < len(pretrained_keys):  # Ensure within range
-                    pretrained_weight_key = pretrained_keys[vgg_index]
-                    pretrained_bias_key = pretrained_keys[vgg_index + 1]
-                    
-                    # Check if the layers match in size before assigning
-                    if dict.get(custom_weight_key) is None and dict.get(custom_bias_key) is None:
-                        continue
-                    if (dict[custom_weight_key].shape == weights[pretrained_weight_key].shape and
-                        dict[custom_bias_key].shape == weights[pretrained_bias_key].shape):
-                        print(f"Mapping: {custom_weight_key} -> {pretrained_weight_key}")
-                        # Assign weights and biases
-                        dict[custom_weight_key] = weights[pretrained_weight_key]
-                        dict[custom_bias_key] = weights[pretrained_bias_key]
-                        count += 2
-                    if dict.get(custom_running_mean_key) is not None and dict.get(custom_running_var_key) is not None:
-                        dict[custom_running_mean_key] = weights[pretrained_keys[vgg_index + 2]]
-                        dict[custom_running_var_key] = weights[pretrained_keys[vgg_index + 3]]
-                        dict[custom_num_batches_tracked_key] = weights[pretrained_keys[vgg_index + 4]]
-                        counts += 3
-                    
-                    # Move to the next layer in the VGG16 `features`
-                    vgg_index += count
-
-        # Load the updated state dict into the custom model
-        model.load_state_dict(dict)
+    if n_classes != 1000:
+        model.classifier[-1] = nn.Linear(4096, n_classes)
     return model
 
 
@@ -640,52 +468,6 @@ def vgg19_bn_f(pretrained=True,n_classes=100,ref_dict=None):
         dict = model.state_dict()
 
         # Mapping logic: Directly map "features.*" layers to corresponding "block*.*" layers
-        pretrained_keys = [k for k in weights.keys() if "features" in k]
-        vgg_index = 0
-
-        for block_name in ["block0", "block1", "block2", "block3", "block4"]:
-            # Get the number of layers in each block from the custom model's configuration
-            num_layers_in_block = len([k for k in dict.keys() if block_name in k])
-            for layer_idx in range(num_layers_in_block):
-                # Map VGG16 layer weights to corresponding custom model layer
-                custom_weight_key = f"{block_name}.{layer_idx}.weight"
-                custom_bias_key = f"{block_name}.{layer_idx}.bias"
-                if vgg_index < len(pretrained_keys):  # Ensure within range
-                    pretrained_weight_key = pretrained_keys[vgg_index]
-                    pretrained_bias_key = pretrained_keys[vgg_index + 1]
-                    
-                    # Check if the layers match in size before assigning
-                    if dict.get(custom_weight_key) is None and dict.get(custom_bias_key) is None:
-                        continue
-                    if (dict[custom_weight_key].shape == weights[pretrained_weight_key].shape and
-                        dict[custom_bias_key].shape == weights[pretrained_bias_key].shape):
-                        print(f"Mapping: {custom_weight_key} -> {pretrained_weight_key}")
-                        # Assign weights and biases
-                        dict[custom_weight_key] = weights[pretrained_weight_key]
-                        dict[custom_bias_key] = weights[pretrained_bias_key]
-                    
-                    # Move to the next layer in the VGG16 `features`
-                    vgg_index += 2
-
-        # Load the updated state dict into the custom model
-        model.load_state_dict(dict)
-   
-    return model
-
-def vgg16_f(pretrained=True,n_classes=100,ref_dict=None):
-    """VGG 16-layer model (configuration "D")
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = VGG(cfg["D"])
-    if pretrained:
-        print("Loading pretrained weights")
-        # Load pretrained weights from torchvision
-        weights = ref_dict
-        # Load pretrained VGG16
-        dict = model.state_dict()
-
-        # Mapping logic: Directly map "features.*" layers to corresponding "block*.*" layers
         pretrained_keys = [k for k in weights.keys()]
         vgg_index = 0
 
@@ -699,9 +481,6 @@ def vgg16_f(pretrained=True,n_classes=100,ref_dict=None):
                 custom_running_mean_key = f"{block_name}.{layer_idx}.running_mean"
                 custom_running_var_key = f"{block_name}.{layer_idx}.running_var"
                 custom_num_batches_tracked_key = f"{block_name}.{layer_idx}.num_batches_tracked"
-                print(
-                    dict.get(custom_weight_key),dict.get(custom_bias_key),dict.get(custom_running_mean_key),dict.get(custom_running_var_key),dict.get(custom_num_batches_tracked_key)
-                )
                 count = 0 
                 if vgg_index < len(pretrained_keys):  # Ensure within range
                     pretrained_weight_key = pretrained_keys[vgg_index]
@@ -721,10 +500,18 @@ def vgg16_f(pretrained=True,n_classes=100,ref_dict=None):
                         dict[custom_running_mean_key] = weights[pretrained_keys[vgg_index + 2]]
                         dict[custom_running_var_key] = weights[pretrained_keys[vgg_index + 3]]
                         dict[custom_num_batches_tracked_key] = weights[pretrained_keys[vgg_index + 4]]
-                        counts += 3
+                        count += 3
                     
                     # Move to the next layer in the VGG16 `features`
                     vgg_index += count
+
+        classifier_layers = len([k for k in dict.keys() if 'classifier' in k])
+        for cls_idx in [0,3,6]:
+            custom_cls_key = f"classifier.{cls_idx}"
+            pretrained_cls_key = f"classifier.{cls_idx}"
+            dict[custom_cls_key + ".weight"] = weights[pretrained_cls_key + ".weight"]
+            dict[custom_cls_key + ".bias"] = weights[pretrained_cls_key + ".bias"]
+            print(f"Mapping Classifier layer: {custom_cls_key}")
 
         # Load the updated state dict into the custom model
         model.load_state_dict(dict)
