@@ -1,0 +1,59 @@
+nekd -> centralized (resnet32 -> resnet18) , (resnet18reduced -> resnet18reduced), (simplecnn -> simplecnn (did not work (less batchnorm))
+
+zskd (mnist -> resnet18) (40 min DI generation , 68% , not practical -> abandon))
+
+centralized:
+
+MT,SS KD:
+5 different teachers on different models
+checking difference between uniform weighting and reliability based weighting
+-> with actual data (ayyan)
+-> with nekd
+
+Extend to federated:
+server - client:
+datasets: CIFAR, MNIST (alpha = 0.1, 2)
+
+Benchmark:
+FedAvg
+FedSAM
+*(Distillation Method)
+
+Server-Client:
+
+NEKD_from_prev_global_model:
+-> choice of lambdas ({0.5,0.5},{0.3,0.7},{0.7,0.3},{1,0},{0,1})
+-> client side: SAM, SGD
+* distillation epochs (5,20,30)
+
+NEKD after FedAvg:
+-> choice of lambdas ({0.5,0.5},{0.3,0.7},{0.7,0.3},{1,0},{0,1})
+-> client side: SAM, SGD
+* distillation epochs
+
+Type of Noise:
+-> random gaussian
+* dead leaves dataset
+
+
+Server-less:
+alpha_1, alpha_2, beta
+alpha_1: noise kld weight
+alpha_2: ground_truth_data_kld_weight
+beta: CELoss weight (ground_truth)
+
+NEKD_from_current_local_model:
+-> choice of lambdas ({0.5,0.5},{0.3,0.7},{0.7,0.3},{1,0},{0,1})
+-> client side: SAM, SGD
+-> distillation epochs
+
+NEKD after FedAvg:
+-> choice of lambdas ({0.5,0.5},{0.3,0.7},{0.7,0.3},{1,0},{0,1})
+-> client side: SAM, SGD
+-> distillation epochs
+
+Type of Noise:
+-> random gaussian
+* dead leaves dataset
+
+
